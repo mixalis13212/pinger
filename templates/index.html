@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Состояние спутниковых терминалов</title>
+    <style>
+        table.maintable {
+            background-color: rgb(162, 209, 191);
+            border: black solid;
+            border-collapse: collapse;
+            empty-cells: show;
+        }
+        
+        td.status {
+            font-size: 0.7em;
+            max-width: 10%;
+        }
+        
+        td.note {
+            font-size: 0.7em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Статус спутниковых терминалов</h1>
+    <table class="maintable" border="1">
+        <tr>
+            <th>IP адрес</th>
+            <th>Описание</th>
+            <th>SiteID</th>
+            <th style="font-size: 0.7em">Сейчас</th>
+            <th>00</th>
+            <th>01</th>
+            <th>02</th>
+            <th>03</th>
+            <th>04</th>
+            <th>05</th>
+            <th>06</th>
+            <th>07</th>
+            <th>08</th>
+            <th>09</th>
+            <th>10</th>
+            <th>11</th>
+            <th>12</th>
+            <th>13</th>
+            <th>14</th>
+            <th>15</th>
+            <th>16</th>
+            <th>17</th>
+            <th>18</th>
+            <th>19</th>
+            <th>20</th>
+            <th>21</th>
+            <th>22</th>
+            <th>23</th>
+        </tr>
+        {{range $k, $v := .}}
+        <tr>
+            <td>
+                <a href="http://{{$k}}/">{{$k}}</a></td>
+            <td class="note"><a href="http://{{$k}}/">{{$v.Note}}</a></td>
+            <td><a href="http://{{$k}}/">{{$v.SiteID}}</a></td>
+            <!-- Текущие статусы спутниковых станций -->
+            {{if $v.CodeNow}} {{if eq $v.CodeNow 2}}
+            <td style="background-color: green ">√</td>
+            {{else}}
+            <td style="background-color: red ">X</td>
+            {{end}} {{else}}
+            <td style="background-color: grey">O</td>
+            {{end}}
+            <!-- Основная таблица статусов спутниковых станций -->
+            {{range $s := $v.Code}} {{if $s}} {{if eq $s 2}}
+            <td style="background-color: green ">√</td>
+            {{else}}
+            <td style="background-color: red ">X</td>
+            {{end}} {{else}}
+            <td style="background-color: grey">O</td>
+            {{end}} {{end}}
+        </tr>
+        {{end}}
+    </table>
+    <p>
+        <table class="action">
+            <tr>
+                <td>
+                    <input id="clickMe" type="button" value="Проверить состояние" onclick="sendRequest('/checknow', '');" />
+                </td>
+                <td>
+                    <button onclick="window.open('/getreport','_blank')">Создать отчёт</button>
+                </td>
+            </tr>
+        </table>
+    </p>
+    <p>
+        <table class="legeng">
+            <tr>
+                <td style="background-color: green ">√</td>
+                <td>- Станция онлайн</td>
+                <td style="background-color: red ">X</td>
+                <td>- Станция офлайн</td>
+                <td style="background-color: grey">O</td>
+                <td>- Станция еще не проверялась</td>
+            </tr>
+        </table>
+    </p>
+    <p><a href="/report/">Архив отчётов</a></p>
+
+    <script>
+        /*Попытаемся создать код мультиплатформенным. IE и нормальные браузеры создают объект XMLHttpRequest по разному. Кроме того, разные версии IE его создают по разному. Придётся повторить операцию для всех.*/
+        var request;
+
+        function createRequest() {
+            // Это для адекватных современных браузеров
+            if (window.XMLHttpRequest) request = new XMLHttpRequest();
+            // Internet Explorer 
+            else if (window.ActiveXObject) {
+                // IE разных версий 
+                try {
+                    request = new ActiveXObject('Msxml2.XMLHTTP');
+                } catch (e) {}
+                try {
+                    request = new ActiveXObject('Microsoft.XMLHTTP');
+                } catch (e) {}
+            }
+            return request;
+        }
+
+        function sendRequest(locationRequest, parameters) { // Создаем запрос 
+            request = createRequest();
+            if (request) {
+                // Посылаем POST-запрос. // Указываем адрес, false - асинхронный режим выключен 
+                request.open("POST", locationRequest, true);
+                // Отправляем дополнительно header, т.к. метод POST 
+                request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                // Отправляем запрос с параметрами //(несколько параметров разделять &) 
+                request.send(parameters);
+                // Если всё хорошо 
+                //     if (request.status == 200) {
+                //         // Берём ответ в виде строки 
+                //         var stRespond = request.responseText;
+                //         // Выполняем eval(), предварительно проверив данные.Мало ли;) 
+                //         var evalRespond = !(/[^,:{}[]0-9.-+Eaeflnr-u \n\r\t]/.test(stRespond.replace(/"(.|[^"])*"/g, ''))) && eval('(' + stRespond + ')'); // Создаем массив данных 
+                //         var arrayRespond = new Object(evalRespond);
+                //     } else { //Если сервер вернул ошибку
+                //         alert("Ошибка получения данных:\n" + request.statusText);
+                //     }
+                // } else {
+                //     alert("Браузер не поддерживает технологию AJAX");
+            }
+            // return arrayRespond;
+            alert("ВНИМАНИЕ!!! Обновление статусов спутниковых станций произойдёт через 4-15 минут, в зависимости от количества станций. Поэтому прошу НЕ НАЖИМАТЬ кнопку повторно ранее чем через 30 МИНУТ!!!")
+            return
+        } // использование sendRequest(locationRequest,'параметры, например (showPage="3")');
+    </script>
+</body>
+
+</html>
